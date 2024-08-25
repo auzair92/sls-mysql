@@ -55,6 +55,6 @@ app.use((err, req, res, next) => {
 
 // Start the server
 const PORT = 8080;
-app.listen(PORT, "0.0.0.0" () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on port: ${PORT}`);
 });
