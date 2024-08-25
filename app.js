@@ -35,9 +35,7 @@ app.use((err, req, res, next) => {
 app.use(morgan('combined')); // Log HTTP requests
 
 // Enable CORS for all origins
-app.use(cors({
-  origin: true // Allow all origins
-}));
+app.use(cors());
 
 app.use(bodyParser.json()); // Parse incoming requests with JSON payloads
 
