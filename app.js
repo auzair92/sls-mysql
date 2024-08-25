@@ -2,7 +2,7 @@ require('dotenv').config({ path: './config/.env' });
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
-const rateLimiter = require('./middleware/rateLimiter');
+// const rateLimiter = require('./middleware/rateLimiter');
 const logger = require('./utils/logger');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
@@ -29,17 +29,14 @@ app.use((err, req, res, next) => {
 //   }),
 // );
 
-app.use(rateLimiter);
+// app.use(rateLimiter);
 
 // Logging with Morgan and Winston
 app.use(morgan('combined')); // Log HTTP requests
 
-// Middleware
+// Enable CORS for all origins
 app.use(cors({
-  // origin: process.env.CORS_ORIGIN || '*', // Adjust according to your front-end origin
-  origin: '*',
-  methods: 'GET,POST,PUT,DELETE',
-  allowedHeaders: 'Content-Type,Authorization'
+  origin: true // Allow all origins
 }));
 
 app.use(bodyParser.json()); // Parse incoming requests with JSON payloads
