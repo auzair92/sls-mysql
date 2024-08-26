@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
-// const rateLimiter = require('./middleware/rateLimiter');
+const rateLimiter = require('./middleware/rateLimiter');
 const logger = require('./utils/logger');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
@@ -12,6 +12,7 @@ const investorRoutes = require('./routes/investors.js');
 const defStatusRoutes = require('./routes/defStatus.js');
 const statusRoutes = require('./routes/statuses.js');
 const investmentRoutes = require('./routes/investments.js');
+const dashboardRoutes = require('./routes/dashboard.js');
 
 const app = express();
 
@@ -21,21 +22,25 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'An error occurred' });
 });
 
-// app.use(
-//   helmet.contentSecurityPolicy({
-//     directives: {
-//       "script-src": ["'self'", "code.jquery.com", "cdn.jsdelivr.net"],
-//     },
-//   }),
-// );
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      "script-src": ["'self'", "code.jquery.com", "cdn.jsdelivr.net"],
+    },
+  }),
+);
 
-// app.use(rateLimiter);
+app.use(rateLimiter);
 
 // Logging with Morgan and Winston
 app.use(morgan('combined')); // Log HTTP requests
 
 // Enable CORS for all origins
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*', // Adjust according to your front-end origin
+  methods: 'GET,POST,PUT,DELETE',
+  allowedHeaders: 'Content-Type,Authorization'
+}));
 
 app.use(bodyParser.json()); // Parse incoming requests with JSON payloads
 
@@ -44,6 +49,7 @@ app.use('/api', investorRoutes);
 app.use('/api', statusRoutes);
 app.use('/api', defStatusRoutes);
 app.use('/api', investmentRoutes);
+app.use('/api', dashboardRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -52,7 +58,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start the server
-const PORT = 8080;
-app.listen(PORT, "0.0.0.0", () => {
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });

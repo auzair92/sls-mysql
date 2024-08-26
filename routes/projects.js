@@ -113,6 +113,9 @@ router.post('/projects', async (req, res) => {
   const connection = await pool.getConnection();
 
   try {
+
+    await connection.beginTransaction();
+
     const { Title, Description, Commencement_Date } = req.body;
 
     if (!Title || !Commencement_Date) {
@@ -144,6 +147,8 @@ router.post('/projects', async (req, res) => {
       `;
     const [newProject] = await connection.query(selectQuery, [projectId]);
 
+    await connection.commit();
+
     // Return the new project row as JSON
     res.status(201).json(newProject[0]);
   } catch (err) {
@@ -160,6 +165,9 @@ router.put('/projects/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
+
+    await connection.beginTransaction();
+
     const { Title, Description, Status_ID, Status_Date } = req.body;
 
     if (!Title) {
@@ -185,8 +193,13 @@ router.put('/projects/:id', async (req, res) => {
           `;
       const [latestStatus] = await connection.query(selectStatusQuery, [id]);
 
+      console.log(latestStatus)
+      console.log(latestStatus.length)
+      console.log(latestStatus[0].Status_ID)
+      console.log(Status_ID)
+
       // Insert a new status only if the new status is different from the latest one
-      if (latestStatus.length === 0 || latestStatus[0].Status_ID !== Status_ID) {
+      if (latestStatus.length === 0 || String(latestStatus[0].Status_ID) !== String(Status_ID)) {
         const insertStatusQuery = `
                   INSERT INTO Project_Statuses (Project_ID, Status_ID, Status_Date)
                   VALUES (?, ?, ?);
@@ -203,6 +216,8 @@ router.put('/projects/:id', async (req, res) => {
           WHERE p.Project_ID = ? ORDER BY ps.Status_Date DESC LIMIT 1;
       `;
     const [updatedProject] = await connection.query(selectQuery, [id]);
+
+    await connection.commit();
 
     res.status(200).json(updatedProject[0]);
   } catch (err) {
