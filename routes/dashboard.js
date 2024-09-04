@@ -95,4 +95,60 @@ router.get('/dashboard/total-active-projects', async (req, res) => {
   }
 });
 
+router.get('/dashboard/latest-activities-timeline', async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    const result = await connection.query(`
+          SELECT 
+                i.Investment_ID AS Activity_ID,
+                'Investment' AS Activity_Type,
+                i.Investment_Amount AS Amount,
+                i.Investment_Date AS Activity_Date,
+                p.Project_ID,
+                p.Title AS Project_Title,
+                NULL as Project_Status,
+                inv.Investor_ID,
+                inv.Name AS Investor_Name
+            FROM 
+                Project_Investments i
+            JOIN 
+                Projects p ON i.Project_ID = p.Project_ID
+            JOIN 
+                Investors inv ON i.Investor_ID = inv.Investor_ID
+            WHERE 
+                i.Active = 'Y'
+            UNION ALL
+            SELECT 
+                ps.Status_ID AS Activity_ID,
+                'Status Update' AS Activity_Type,
+                NULL AS Amount,
+                ps.Status_Date AS Activity_Date,
+                p.Project_ID,
+                p.Title AS Project_Title,
+                ds.Status as Project_Status,
+                NULL AS Investor_ID,
+                NULL AS Investor_Name
+            FROM 
+                Project_Statuses ps
+            JOIN 
+                Projects p ON ps.Project_ID = p.Project_ID
+            JOIN 
+                Def_Status ds ON ps.Status_ID = ds.Status_ID
+            WHERE 
+                ps.Active = 'Y'
+            ORDER BY 
+                Activity_Date DESC
+            LIMIT 10;
+      `);
+
+    res.json(result[0]);
+  } catch (err) {
+    logger.error(err);
+    res.status(500).json({ message: 'Internal Server Error' });
+  } finally {
+    connection.release();
+  }
+});
+
+
 module.exports = router;
